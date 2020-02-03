@@ -1,3 +1,9 @@
+# user postgres:
+#    create database <newdb> owner <origdbowner>;
+#        or maybe: create database <newdb> with owner = <origdbowner> encoding = 'UTF8'
+#                           lc_collate = 'cs_CZ.UTF-8' lc_ctype = 'cs_CZ.UTF-8' connection_limit = -1;
+#    psql -d <newdb> < /home/mirek/dj/opentrafficweb/opentrafficweb/opentrafficweb-anonymized.sql
+
 import logging
 import subprocess
 
@@ -10,12 +16,16 @@ logging.basicConfig(format=FORMAT)
 
 
 class Dump:
+    def __init__(self, dbname=None):
+        if dbname is not None:
+            self.dbname = dbname
+
     def dump(self, connection):
         with connection.cursor() as cursor:
             self.dump_1_create_table_copies(cursor)
             self.dump_2_anonymize_tables(cursor)
-            self.dump_3_dump("opentrafficweb")
-            self.dump_4_fixdump("opentrafficweb")
+            self.dump_3_dump()
+            self.dump_4_fixdump()
             self.dump_5_cleanup(cursor)
 
     def dump_1_create_table_copies(self, cursor):
@@ -43,20 +53,24 @@ class Dump:
                                              ('user_%s' % user_id),  # if is_superuser else username,
                                              user_id])
 
-    def dump_3_dump(self, dbname, username=None):
+    def dump_3_dump(self, dbname=None, username=None):
+        if dbname is None:
+            dbname = self.dbname
         if username is None:
             username = dbname
-        cmd = ("pg_dump -Fc --dbname=%s --username=%s" % (dbname, username)).split()
+        cmd = ("pg_dump --dbname=%s --username=%s" % (dbname, username)).split()   # -Fc fails by restore
         cmd.append("--exclude-table=auth_user")
-        with open("%s-anonymized.dump" % dbname, "w") as outfile:
+        with open("%s-anonymized.sql" % dbname, "w") as outfile:
             res = subprocess.run(cmd, stdout=outfile).returncode
         if res:
             logging.error('pg_dump has finished with error value: %i' % res)
         else:
             logging.info('pg_dump has finished with no errors')
 
-    def dump_4_fixdump(self, dbname):
-        subprocess.run(("sed -i s/%s//g %s-anonymized.dump" % (MODIFIER, dbname)).split())
+    def dump_4_fixdump(self, dbname=None):
+        if dbname is None:
+            dbname = self.dbname
+        subprocess.run(("sed -i s/%s//g %s-anonymized.sql" % (MODIFIER, dbname)).split())
 
     def dump_5_cleanup(self, cursor):
         cursor.execute("drop table if exists auth_user%s" % MODIFIER)
