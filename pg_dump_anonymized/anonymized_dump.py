@@ -1,7 +1,7 @@
 # user postgres:
-#    create database <newdb> owner <origdbowner>;
-#        or maybe: create database <newdb> with owner = <origdbowner> encoding = 'UTF8'
-#                           lc_collate = 'cs_CZ.UTF-8' lc_ctype = 'cs_CZ.UTF-8' connection_limit = -1;
+#    as postgres user: create database <newdb> with owner = <origdbowner> template=template0 encoding = 'UTF8'
+#                           lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' connection_limit = -1;
+#                      create extension postgis;
 #    psql -d <newdb> < /home/mirek/dj/opentrafficweb/opentrafficweb/opentrafficweb-anonymized.sql
 
 import logging
