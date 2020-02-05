@@ -1,0 +1,3 @@
+copy the file
+  anonymized_dump.py
+to root of your project and set (inside it) the proper dbname=..
