@@ -9,17 +9,23 @@ Possible installation:
     pip install faker
     pip install pg_dump_anonymized
 
-Add into INSTALLED_APPS:
+If you want just backup/anonymize the basic django auth solution (with auth_user table) using pg_dump
+then add into INSTALLED_APPS:
 
     'pg_dump_anonymized',
 
-Find the installed package in the virtualenvironment and copy file to_project_root/anonymized_dump.py to root of your project (or copy this file from github).
-Inside the file set a dbname=..
+and run:
 
-This should work for the basic django auth_user table and pg_dump. Call:
+    ./manage.py anonymized_dump_basic
+
+If you need a different scenario you don't need change your INSTALLED_APPS.
+Instead find the installed package in the virtualenvironment and copy file to_management_commands/anonymized_dump.py
+to management/commands in the main application of your project (or copy this file from github).
+
+Now
 
     ./manage.py anonymized_dump
 
-
-Under other conditions (other anonymized content, other dump) you should extend the class in <your-project-root>/anonymized_dump.py.
-See the parent class which partial methods you could/should rewrite.
+should work exactly as the previous command, but this is not what you want.
+You need rewrite the anonymized_dump.Dump class - redefine methods from its parent class.
+To do that see pg_dump_anonymized.bk_anonymized.Dump class which methods you need redefine.

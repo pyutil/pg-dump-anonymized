@@ -1,3 +1,7 @@
-copy the file
+Copy the file
   anonymized_dump.py
-to root of your project and set (inside it) the proper dbname=..
+to management/commands of main application in your project
+
+If you want more than anonymize/backup the basic django auth solution (with auth_user table)
+then you need customize the Dump class in this file.
+

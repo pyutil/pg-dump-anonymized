@@ -19,9 +19,36 @@ logging.basicConfig(format=FORMAT)
 
 
 class Dump:
-    def __init__(self, dbname=None):
-        if dbname is not None:
-            self.dbname = dbname
+    def __init__(self, connections=None,
+                 dbname=None, username=None, host='localhost', port='5432',
+                 dumppath=DUMPPATH):
+        """
+        :param connections: if entered, dbname,username,host,port are ignored and taken from connections['default']
+        :param dbname:
+        :param username:
+        :param host:
+        :param port:
+        :param dumppath: location of the dump; default <project_root>/dump/
+        """
+        self.dumppath = dumppath
+        if connections:
+            params = connections['default'].get_connection_params()
+            self.dbname = params['database']
+            self.username = params['user']
+            self.host = params['host']
+            self.port = params['port']
+        else:
+            if dbname is not None:
+                self.dbname = dbname
+            if username:
+                self.username = dbname
+            else:
+                self.username = username
+            self.host = host
+            self.port = port
+
+        if not os.path.isdir(self.dumppath):
+            os.mkdir(self.dumppath)
 
     def dump(self, connection):
         with connection.cursor() as cursor:
@@ -67,24 +94,20 @@ class Dump:
                     retries += 1
         self.logres('auth_user', len(users), retries)
 
-    def dump_3_dump(self, dbname=None, username=None):
+    def dump_3_dump(self):
         # dump exclude original (private) tables
-        if dbname is None:
-            dbname = self.dbname
-        if username is None:
-            username = dbname
         dumpcmd = "pg_dump"
-        cmd = ("%s --dbname=%s --username=%s" % (dumpcmd, dbname, username)).split()   # -Fc fails by restore
+        # pg_dump -Fc fails by restore :( TODO: sure?
+        cmd = ("%s --host=%s --port=%s --dbname=%s --username=%s" % (dumpcmd, self.host, self.port,
+                                                                     self.dbname, self.username)).split()
         cmd.append("--exclude-table=auth_user")
-        with open("%s/%s-anonymized.sql" % (DUMPPATH, dbname), "w") as outfile:
+        with open("%s/%s-anonymized.sql" % (self.dumppath, self.dbname), "w") as outfile:
             res = subprocess.run(cmd, stdout=outfile).returncode
         self.logdumpres(dumpcmd, res)
 
-    def dump_4_fixdump(self, dbname=None):
+    def dump_4_fixdump(self):
         # change table names in dump back to proper name
-        if dbname is None:
-            dbname = self.dbname
-        subprocess.run(("sed -i s/%s//g %s/%s-anonymized.sql" % (MODIFIER, DUMPPATH, dbname)).split())
+        subprocess.run(("sed -i s/%s//g %s/%s-anonymized.sql" % (MODIFIER, self.dumppath, self.dbname)).split())
 
     def dump_5_cleanup(self, cursor):
         cursor.execute("drop table if exists auth_user%s" % MODIFIER)

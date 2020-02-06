@@ -1,10 +1,11 @@
-from django.core.management.base import BaseCommand
-from django.db import connection
+"""
+Backup (anonymized) database.
 
+This works for django initial auth solution (auth_user table) and pg_dump.
+Of course, in this case you need to add pg_dump_anonymized into INSTALLED_APPS to find this management command.
 
-from pg_dump_anonymized.anonymized_dump import Dump
+For other scenarios you don't need change INSTALLED_APPS. Instead customize the code:
+In installed package pg_dump_anonymized see hints in to_management_commands/anonymized_dump.py.)'
+"""
 
-
-class Command(BaseCommand):
-    def handle(self, *args, **kwargs):
-        Dump().dump(connection)
+from pg_dump_anonymized.command_basic import Command
