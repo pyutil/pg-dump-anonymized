@@ -51,7 +51,6 @@ setup(
     author_email='zvolsky@seznam.cz',
     url='https://github.com/pyutil/pg-dump-anonymized',
     download_url='https://github.com/pyutil/pg-dump-anonymized/archive/%s.tar.gz' % __version__,
-    scripts=['scripts/anonymize.sql'],
     packages=[
         'pg_dump_anonymized',
     ],
